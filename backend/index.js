@@ -1,6 +1,7 @@
 import express  from "express";
 import mongoose from "mongoose";
 import CustomerRouter from "./routes/Customer.routes.js";
+import BookRouter from "./routes/Book.routes.js";
 import bodyParser from "body-parser";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -17,7 +18,8 @@ const port = process.env.SERVER_PORT || 8080;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+// configuring the path where the uploaded files will be saved
+// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ---- connecting with database --- i have placed mongo_url in the .env file -----
 
@@ -36,5 +38,7 @@ mongoose.connect(process.env.MONGO_URL,
 );
 
 app.use("/customer",CustomerRouter);
+app.use("/books", BookRouter);
+
 
 app.listen(port, ()=>{console.log(`Server is listening at port ${port}`)});

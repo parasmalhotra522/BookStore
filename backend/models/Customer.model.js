@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import validator from "validator";
 import jsonwebtoken  from "jsonwebtoken";
+import Book from "./Books.model.js";
 
 const jwt = jsonwebtoken;
 const customerSchema  = new mongoose.Schema({
@@ -22,8 +23,16 @@ const customerSchema  = new mongoose.Schema({
         enum: ['customer', 'admin'], 
         default: 'customer' 
     },
+    cart: [{
+      bookId: {type:mongoose.Schema.Types.ObjectId, ref:'Book'},
+        quantity: {
+          type: Number,
+          default: 0,
+      },
+       
+    }],
+    token: { type: String}
 
-    token: { type: String} ,
 
 });
 

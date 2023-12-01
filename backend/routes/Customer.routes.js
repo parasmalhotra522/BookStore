@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 import crypto from "crypto";
 const app = express.Router();
 const jwt = jsonwebtoken;
-import { authenticateToken } from "../auth/auth.js";
+import { authenticateToken, isAdmin } from "../utils/auth.js";
 
 // const generateSecretKey = () => {
 //   return crypto.randomBytes(32).toString('hex'); // 32 bytes for a strong secret
@@ -49,6 +49,7 @@ app.post("/register", async(req, res) => {
             {
                 customerId: customer._id,
                 emailId: customer.emailId,
+                role:customer.role
 
             },
            process.env.SECRET_KEY,
@@ -94,8 +95,12 @@ app.post("/login", async (req, res) => {
         console.log("Im checking login", user);
         
         const token = jwt.sign(
-          { user_id: user._id,
-             emailId },
+          { 
+            user_id: user._id,
+            emailId,
+            role: user.role,
+
+            },
             process.env.SECRET_KEY,
           {
             expiresIn: "1h",
@@ -115,17 +120,21 @@ app.post("/login", async (req, res) => {
       console.error(err);
       res.status(500).send({message:"Internal Server Error! \n Please try again after some time"});
     }
-    // Our register logic ends here
+
   });
   
+// ---------- tesing authentication ----
 
-// app.use(express.json());
-// app.use('/auth', authRoutes);
+// app.get('/protected', authenticateToken, (req, res) => {
+//   res.json({ message: 'Protected route accessed successfully', user: req.user });
+// });
 
-app.get('/protected', authenticateToken, (req, res) => {
-  res.json({ message: 'Protected route accessed successfully', user: req.user });
-});
+// app.get('/books', authenticateToken, isAdmin, (req, res) => {
+  
+//   console.log("I am in the /books");
+//     res.status(200).send({message: "Post successfull"});
 
+// })
 
 
 
