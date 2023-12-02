@@ -2,10 +2,10 @@ import express  from "express";
 import mongoose from "mongoose";
 import CustomerRouter from "./routes/Customer.routes.js";
 import BookRouter from "./routes/Book.routes.js";
+import ordersRouter from "./routes/order.routes.js";
 import bodyParser from "body-parser";
 import cors from "cors";
 import dotenv from "dotenv";
-
 
 
 // configuring the dotenv files to be used
@@ -39,6 +39,6 @@ mongoose.connect(process.env.MONGO_URL,
 
 app.use("/customer",CustomerRouter);
 app.use("/books", BookRouter);
-
+app.use("/orders", ordersRouter);
 
 app.listen(port, ()=>{console.log(`Server is listening at port ${port}`)});
