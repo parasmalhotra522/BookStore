@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import { Disclosure, Menu, Transition } from "@headlessui/react";
-import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { PlusIcon } from "@heroicons/react/20/solid";
+import { HomeIcon, PencilSquareIcon, QueueListIcon, ShoppingCartIcon , Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, HomeIcon as Home, PencilSquareIcon as Pencil, QueueListIcon as Queue, ShoppingCartIcon as ShoppingCart } from "@heroicons/react/20/solid";
 import { NavLink, useLocation } from "react-router-dom";
 
 function classNames(...classes) {
@@ -42,41 +42,61 @@ export default function Navigation() {
                     exact
                     className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium text-gray-900 ${
                       location.pathname === "/"
-                        ? "border-indigo-500"
+                        ? "border-indigo-500 text-indigo-500"
                         : "border-transparent"
                     }`}
                   >
-                    Home
+                  {location.pathname === '/' ? (
+                    <Home className="w-6 h-6" />
+                  ) : (
+                    <HomeIcon className="w-6 h-6" />
+                  )}
+                    <span className="pl-1">Home</span>
                   </NavLink>
                   <NavLink
                     to="/manage-books"
                     className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 ${
                       location.pathname === "/manage-books"
-                        ? "border-indigo-500"
+                        ? "border-indigo-500 text-indigo-500"
                         : "border-transparent"
                     }`}
                   >
-                    Manage Books
+                  {location.pathname === '/manage-books' ? (
+                    <Pencil className="w-6 h-6" />
+                  ) : (
+                    <PencilSquareIcon className="w-6 h-6" />
+                  )}
+                  <span className="pl-1">Manage Books</span>
                   </NavLink>
                   <NavLink
                     to="/view-orders"
                     className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 ${
                       location.pathname === "/view-orders"
-                        ? "border-indigo-500"
+                        ? "border-indigo-500 text-indigo-500"
                         : "border-transparent"
                     }`}
                   >
-                    View Orders
+                  {location.pathname === '/view-orders' ? (
+                    <Queue className="w-6 h-6" />
+                  ) : (
+                    <QueueListIcon className="w-6 h-6" />
+                  )}
+                  <span className="pl-1">View Orders</span>
                   </NavLink>
                   <NavLink
                     to="/cart"
                     className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 ${
                       location.pathname === "/cart"
-                        ? "border-indigo-500"
+                        ? "border-indigo-500 text-indigo-500"
                         : "border-transparent"
                     }`}
                   >
-                    Cart
+                  {location.pathname === '/cart' ? (
+                    <ShoppingCart className="w-6 h-6" />
+                  ) : (
+                    <ShoppingCartIcon className="w-6 h-6" />
+                  )}
+                  <span className="pl-1">Cart</span>
                   </NavLink>
                 </div>
               </div>
