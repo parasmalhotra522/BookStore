@@ -9,6 +9,12 @@ const bookSchema = mongoose.Schema({
     bookDescription : {type:String},
     bookPrice:{type:Number, required:true},
     
+    // inventory : {mongoose.Schema.Types.ObjectId}
+    
+    // bookQuantity : {type:Number, required: true} 
+    // If purchased succesful then decrease the bookQuantity from inventory, if zero out of stock, set status unavailable
+    //
+
 });
 const Book = mongoose.model('Book', bookSchema);
 
