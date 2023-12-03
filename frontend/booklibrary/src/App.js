@@ -8,6 +8,8 @@ import Signup from './components/Signup';
 import Cart from './components/Cart';
 import ManageBooks from './components/ManageBooks';
 import Orders from './components/Orders';
+import Profile from './components/Profile';
+import AddBook from './components/AddBook';
 
 function App() {
   const [isLoggedIn , setIsLoggedIn] = useState(false);
@@ -29,6 +31,8 @@ function App() {
       <Route path="/cart" element={<Cart/>} />
       <Route path="/manage-books" element={<ManageBooks/>} />
       <Route path="/view-orders" element={<Orders/>} />
+      <Route path="/profile" element={<Profile/>} />
+      <Route path="/add-book" element={<AddBook/>} />
     </Routes>
   </Router>
   );

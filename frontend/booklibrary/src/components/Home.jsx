@@ -55,8 +55,8 @@ const products = [
 export default function Home() {
   return (
     <div>
-      <div className="mx-auto max-w-2xl px-4 sm:px-6 sm:py-10 lg:max-w-7xl lg:px-8">
-        <h2 className="text-2xl font-bold text-gray-900">Book Lists</h2>
+      <div className="mx-auto max-w-2xl px-4 sm:px-6 sm:py-10 lg:max-w-7xl lg:px-8 ">
+        <h2 className="text-2xl font-bold text-gray-900 tracking-tight sm:text-3xl">Book Lists</h2>
 
         <div className="mt-8 grid grid-cols-1 gap-y-12 sm:grid-cols-2 sm:gap-x-4 lg:grid-cols-4 xl:gap-x-6">
           {products.map((product) => (
