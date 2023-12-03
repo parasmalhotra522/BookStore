@@ -41,7 +41,7 @@ app.get("/:id", async(req, res) => {
 app.post("/CreateBook", upload.single("bookImage"), async(req, res) => {
    try {
     console.log("I AM CREATING BOOK", req.body);
-    const {bookName, bookCategory, bookAuthor, bookDescription } = req.body;
+    const {bookName, bookCategory, bookAuthor, bookDescription, bookPrice } = req.body;
     const bookImage =  req.file ? (req.file.buffer.toString("base64")) : "";
     // const bookImage = req.file.buffer?.toString('base64') || "";
     const newBook = await Book.create({
@@ -50,14 +50,15 @@ app.post("/CreateBook", upload.single("bookImage"), async(req, res) => {
         bookAuthor,
         bookImage,
         bookDescription,
-      });
+        bookPrice
+    });
       console.log("CREAATING", newBook);
       res.status(201).json(newBook);
 
    }
    catch(error) {
     console.log(error);
-    res.status(500).json({ error: 'Error creating a new book' });
+    res.status(403).json({ error: 'Error creating a new book' });
    }
     
 });
@@ -65,11 +66,11 @@ app.post("/CreateBook", upload.single("bookImage"), async(req, res) => {
 // 4) UPDATE (UPDATE AN EXISTING BOOK INFORMATION) ----- ONLY ADMIN
 app.put("/updateBook/:id",authenticateToken, isAdmin , async(req, res)=>{
     try {
-        const {bookName,bookCategory, bookAuthor, bookDescription} = req.body;
+        const {bookName,bookCategory, bookAuthor, bookDescription, bookPrice} = req.body;
         const id = req.params.id;
         const book =  await Book.findOneAndUpdate(
             {_id:id},
-            {$set: {bookName, bookCategory, bookAuthor, bookDescription}},
+            {$set: {bookName, bookCategory, bookAuthor, bookDescription, bookPrice}},
             {new:true},
         );
         if (!book) {
