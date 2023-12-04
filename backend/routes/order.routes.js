@@ -5,6 +5,7 @@ import express from "express";
 import stripeLib from 'stripe';
 import { authenticateToken } from "../utils/auth.js";
 import Book from "../models/Books.model.js";
+import Inventory from "../models/Inventory.model.js";
 const stripe = stripeLib('sk_test_51Nsr57IKWKaCzW6hlGDg0GHN7F3kktuIdlbJrI0wmbZCHbsxIDMSlJ1FtiRVWCBo2B8FaK72hD0WmIl5ODr5pIeK00rIrdekY6');
 
 const app = express.Router();
@@ -47,7 +48,44 @@ app.get("/customer/:id", authenticateToken, async(req, res) => {
 
 const calculateAmount = (books) => {
     console.log("I AM IN CALCULATE PAYMENT", books);
-    return 50;
+    // [
+    //   {
+    //     book: {
+    //       _id: new ObjectId('656cd0972b7917d93ff2f1ad'),
+    //       bookName: 'Tales of the Spider Man',
+    //       bookCategory: 'Science Fiction for children & Teenagers',
+    //       bookAuthor: 'Aakarshan',
+    //       bookImage: '',
+    //       bookDescription: 'It is a science fiction movie based on the tales and events of the character named Spiderman having a back story',
+    //       bookPrice: 120.99,
+    //       __v: 0
+    //     },
+    //     quantity: 3
+    //   },
+    //   {
+    //     book: {
+    //       _id: new ObjectId('656bd721b4176cca0de44744'),
+    //       bookName: 'Introduction to java',
+    //       bookCategory: 'education',
+    //       bookAuthor: 'Ashwin Rajput',
+    //       bookImage: '',
+    //       bookDescription: 'TESTign the new book',
+    //       bookPrice: 43,
+    //       __v: 0
+    //     },
+    //     quantity: 2
+    //   }
+    // ]
+  let totalAmount = 0;
+  books.forEach(({book, quantity})=> {
+   console.log("CHECK BOOK", book, quantity);
+    const {bookPrice} = book;
+    console.log("CHECKING PRICE CALC", bookPrice , quantity, (bookPrice * quantity))
+    totalAmount += (bookPrice * quantity);
+  
+  });
+  // STripe wants the currency should be in cents ... so rounding of and * 100
+  return Math.round(totalAmount * 100);;
 }
 
 
@@ -63,28 +101,96 @@ app.post("/customer/placeOrder/:id", authenticateToken, async (req, res) => {
         return res.status(404).send({ message: `Customer with id ${customerId} doesn't exist. Please log in with correct credentials.` });
       }
   
-      // Calculate the order amount
-      const orderAmount = await calculateAmount(books);
+    let newOrderAsPerInventory = [];
+    let orderNotFulfilling = [];
+
+    for(const book of books) {
+      // Use findOne to get a single document
+      // console.log("Order REQ placed for book ", book.book, await Inventory.find({book:book.book}));
+      const inventoryForOrderedBook = await Inventory.findOne({book:book.book});
+      console.log("CHECK...THE INVENTORY", inventoryForOrderedBook);
+     
+      const inventoryBookQuantity = inventoryForOrderedBook.bookQuantity;
+      const inventoryBookId = inventoryForOrderedBook.book;
+      // console.log("INVENTORY", inventoryBookQuantity, "ORDERED", book.quantity);
   
-      // Create paymentIntent and confirm it
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: orderAmount,
-        currency: 'usd',
-        customer: customerIdStripeAccount,
-        confirmation_method: "automatic",
-        confirm: true,
-        payment_method,
-        return_url:'https://localhost:3000'
-      });
-  
+      
+    if(inventoryBookQuantity < book.quantity) {
+      
+      // console.log("INVENTORY IS LESS THAN BOOK QUANTITY", book.book)   
+      // console.log("---- FROM INVENTORY BOOK ---", inventoryBookId[0].toString(),inventoryBookQuantity )
+      // console.log("VS ORDERED " +book.book, book.quantity);
+      
+      // inventoryBookId[0].toString()
+      const rejectList = book.quantity - inventoryBookQuantity;
+      
+      // console.log(`${inventoryBookId[0].toString()} REJECT..., ${rejectList} SEND ${inventoryBookQuantity}`);
+
+      orderNotFulfilling.push({book:inventoryBookId[0].toString(), quantity:rejectList});
+      if(inventoryBookQuantity!=0){
+      newOrderAsPerInventory.push({book:inventoryBookId[0].toString(), quantity: inventoryBookQuantity })
+      }
+      console.log("CHECK NOT fulfilled ",orderNotFulfilling, '\n',
+      "FULFILLED",newOrderAsPerInventory);
+      }
+    else {
+      console.log("IN THE ELSEEEEEEEE");
+    newOrderAsPerInventory = [...books];
+    }
+      // console.log("NO PROBLEM NORMAL ORDER", newOrderAsPerInventory);
+    }
+  const order_not_getting_fulfilled = await Promise.all(orderNotFulfilling.map(async (book) => {
+    // // console.log("CHECKING BOoK ORDERED", book);    
+    const orderDetailNotFulfilled = await Book.findOne({ _id: book.book });
+    return {
+      message : `Quantity for "${orderDetailNotFulfilled.bookName}" not available`,
+      book: orderDetailNotFulfilled,
+      quantity: book.quantity,
+    };
+  })
+  );
+
+  console.log("THE ORDER WHICH WE NOT BE FULFILLING", order_not_getting_fulfilled);
       // Create order in the database
-      const booksForOrder = await Promise.all(books.map(async (book) => {
-        const bookDetails = await Book.findOne({ _id: book.book });
+      const booksForOrder = await Promise.all(newOrderAsPerInventory.map(async (book) => {
+        console.log("CHECKING BOoK ORDERED", book);    
+      const bookDetails = await Book.findOne({ _id: book.book });
+      // we need to update the inventory whenver we place an order
+       // Calculate the order amount
+      console.log("CHEKCING ONLY ORDERED BOOKS WITH ENOUGH QT", bookDetails);
+      
+
+      await Inventory.findOneAndUpdate(
+        {book:bookDetails._id} ,
+        {$inc:{bookQuantity:-book.quantity}},
+        {upsert:true}
+      );
+
         return {
           book: bookDetails,
           quantity: book.quantity,
         };
       }));
+
+           
+      const orderAmount = await calculateAmount(booksForOrder);
+      console.log("CHECK .. order amount", orderAmount);
+      if (orderAmount == 0) {
+       res.status(400).send({
+          message: `The Product is unavailable`,
+          "OrderRejected" : order_not_getting_fulfilled,
+        });
+      } else {
+        // Create paymentIntent and confirm it
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: orderAmount,
+          currency: 'usd',
+          customer: customerIdStripeAccount,
+          confirmation_method: "automatic",
+          confirm: true,
+          payment_method,
+          return_url:'https://localhost:3000'
+        });
   
       const newOrder = await Order.create({
         customerId: customerId,
@@ -92,15 +198,14 @@ app.post("/customer/placeOrder/:id", authenticateToken, async (req, res) => {
         orderOptions: orderOptions,
         paymentIntentId: paymentIntent.id,
       });
-  
-      // change the inventory.... 
-     
 
       res.status(201).send({
         message: `New order with Order id ${newOrder._id} created successfully`,
         newOrder,
+        "OrderRejected" : order_not_getting_fulfilled,
         confirmedPaymentIntent: paymentIntent,
       });
+    }
     } catch (error) {
       console.error(error);
       res.status(500).send({ message: "Oops!! Something went Wrong" });
@@ -108,10 +213,5 @@ app.post("/customer/placeOrder/:id", authenticateToken, async (req, res) => {
   });
 
 
-
-
-
-
 export default app;
-
 

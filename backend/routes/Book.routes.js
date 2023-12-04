@@ -2,6 +2,7 @@ import express from "express";
 import { authenticateToken, isAdmin } from "../utils/auth.js";
 import Book from  "../models/Books.model.js";
 import upload from "../utils/fileUpload.js";
+import Inventory from "../models/Inventory.model.js";
 
 
 const app = express.Router();
@@ -41,7 +42,7 @@ app.get("/:id", async(req, res) => {
 app.post("/CreateBook", upload.single("bookImage"), async(req, res) => {
    try {
     console.log("I AM CREATING BOOK", req.body);
-    const {bookName, bookCategory, bookAuthor, bookDescription, bookPrice } = req.body;
+    const {bookName, bookCategory, bookAuthor, bookDescription, bookPrice, bookQuantity } = req.body;
     const bookImage =  req.file ? (req.file.buffer.toString("base64")) : "";
     // const bookImage = req.file.buffer?.toString('base64') || "";
     const newBook = await Book.create({
@@ -52,6 +53,12 @@ app.post("/CreateBook", upload.single("bookImage"), async(req, res) => {
         bookDescription,
         bookPrice
     });
+
+        await Inventory.create({
+            book:newBook._id,
+            bookQuantity:bookQuantity
+        });
+
       console.log("CREAATING", newBook);
       res.status(201).json(newBook);
 
@@ -66,7 +73,7 @@ app.post("/CreateBook", upload.single("bookImage"), async(req, res) => {
 // 4) UPDATE (UPDATE AN EXISTING BOOK INFORMATION) ----- ONLY ADMIN
 app.put("/updateBook/:id",authenticateToken, isAdmin , async(req, res)=>{
     try {
-        const {bookName,bookCategory, bookAuthor, bookDescription, bookPrice} = req.body;
+        const {bookName,bookCategory, bookAuthor, bookDescription, bookPrice, bookQuantity} = req.body;
         const id = req.params.id;
         const book =  await Book.findOneAndUpdate(
             {_id:id},
@@ -76,6 +83,12 @@ app.put("/updateBook/:id",authenticateToken, isAdmin , async(req, res)=>{
         if (!book) {
             res.status(404).send({ message: `Book with Book Id ${id} not found` });
         }
+
+        // ---- UPDATING THE INVENTORY WHENEVER AND WHATEVER ADMIN WANTS THAT QUANTITY TO BE
+        await Inventory.findOneAndUpdate(
+            {book: book._id},
+            {$set:{bookQuantity}}
+            );
         res.status(200).send({message:`Book with Book Id ${id} Updated Successfully`, books:await Book.find()});
     } catch(error) {
         res.status(500).send({message:"Internal Server Error!!! Please try again later"});
@@ -93,6 +106,13 @@ app.delete("/deleteBook/:id", authenticateToken, isAdmin , async(req, res) => {
         if (!bookToBeDeleted) {      
             res.status(404).send({ message: `Book with Book Id ${id} not found` });
         }
+        // ------ we will delete the book but for storage purposes we will just update the Quantity to 0
+        
+        await Inventory.findOneAndUpdate(
+            {book: bookToBeDeleted._id},
+            {$set:{bookQuantity:0}}
+            );
+
        res.status(200).send({message:`Book with Book Id ${id} deleted Successfully`, books:await Book.find()});
    } catch(err) {
        res.status(500).send({message:"Internal Server Error!!! Please try again later"});
