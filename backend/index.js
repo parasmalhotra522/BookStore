@@ -23,7 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // ---- connecting with database --- i have placed mongo_url in the .env file -----
 
-mongoose.connect(process.env.MONGO_URL,
+mongoose.connect("mongodb://localhost:27017/BookStore",
 {
     useNewUrlParser: true,
     useUnifiedTopology: true,
