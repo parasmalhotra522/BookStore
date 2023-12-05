@@ -123,20 +123,37 @@ app.post("/login", async (req, res) => {
 
   });
   
-// ---------- tesing authentication ----
 
-// app.get('/protected', authenticateToken, (req, res) => {
-//   res.json({ message: 'Protected route accessed successfully', user: req.user });
-// });
+// ------ functionality for the user to edit his profile
 
-// app.get('/books', authenticateToken, isAdmin, (req, res) => {
+app.put("/update-profile/:id",authenticateToken, async(req, res) => {
   
-//   console.log("I am in the /books");
-//     res.status(200).send({message: "Post successfull"});
+  // --- user should be able to update his firstName, lastName, and password
+  // --- CAN"T UPDATE EMAIL ID
 
-// })
+  const { firstName, lastName, password } = req.body;
+  const userId = req.params.id;
 
+  try {
+  const updatedCustomer = await Customer.findOneAndUpdate(
+    { _id:userId },
+    { $set: {firstName, lastName, password }},
+    { new:true }
+    );
+    console.log("CHECK UPDATED RECORD", updatedCustomer);
+  
+  if (!updatedCustomer) {
+    res.status(404).send({message: `User with User Id ${id} Not found`});
+  }
 
+  res.status(200).send(`User with email Id ${updatedCustomer.emailId} updated Successfully`);
+
+}
+catch(error) {
+console.error("ERRR", error);
+  res.status(500).send({message:"Internal Server Error!!! Please try again later"});
+}
+});
 
 export default app;
 

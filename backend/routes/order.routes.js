@@ -45,6 +45,29 @@ app.get("/customer/:id", authenticateToken, async(req, res) => {
     }
 });
 
+//------- FETCH SPECIFIC ORDER........
+
+app.get("/customer/:orderId/:customerId", authenticateToken, async(req, res)=> {
+  try {
+    const {orderId, customerId} = req.params;
+    console.log("CHECKING.. order id & customerid", orderId, customerId);
+
+    const order = await Order.findById(orderId); 
+    if (order) {
+      res.status(200).send({message:`Order with orderId ${orderId} retreived successfully`,
+      order:order
+    })} else {
+      res.status(404).send({message:`Order with orderId ${orderId} doesn't exist`});
+    }
+  } catch(error) {
+    console.error(`Error fetching the specific order`, error);
+    res.status(500).send({message:"Internal Server Error!!! Please try again later"});
+  }
+});
+
+
+
+
 
 const calculateAmount = (books) => {
     console.log("I AM IN CALCULATE PAYMENT", books);
@@ -88,9 +111,7 @@ const calculateAmount = (books) => {
   return Math.round(totalAmount * 100);;
 }
 
-
 // only logged in user can craete an order
-
 app.post("/customer/placeOrder/:id", authenticateToken, async (req, res) => {
     try {
       const { books, orderOptions, customerIdStripeAccount, payment_method } = req.body;
@@ -197,6 +218,7 @@ app.post("/customer/placeOrder/:id", authenticateToken, async (req, res) => {
         books: booksForOrder,
         orderOptions: orderOptions,
         paymentIntentId: paymentIntent.id,
+        orderStatus: "Processing"
       });
 
       res.status(201).send({
@@ -211,6 +233,34 @@ app.post("/customer/placeOrder/:id", authenticateToken, async (req, res) => {
       res.status(500).send({ message: "Oops!! Something went Wrong" });
     }
   });
+
+
+
+// ----- // DELETE EXISTING ORDER.... 
+app.delete("/customer/deleteOrder/:orderId/:customerId/:orderStatus", authenticateToken, async(req, res) => {
+  // -- retreive existing orders.... already processed by the user and already purchased
+  try {
+    const {orderId, customerId, orderStatus} = req.params;
+   console.log("CHECK orderId, customerId, orderStatus", orderId, customerId, orderStatus);
+    const allOrdersForCustomer = await Order.find({customerId: customerId});
+    // console.log("ALL ORDERS FOR CUSTOMER ID",customerId,allOrdersForCustomer )
+
+    // if order status is either pending or processing 
+    // then only user should be able to cancel the order.. else no
+    if(orderStatus =="Processing" || orderStatus == "Pending") { 
+       const order =  await Order.findOneAndDelete({_id:orderId});
+       console.log()
+      res.status(200).send({message:`Order with order Id ${order._id} deleted Successfully`, orders:await Order.find()});
+      }
+      else {
+        res.status(403).send({message:`We can't cancel Order with Order Id ${orderId} as it is either shipped/Delivered`});
+      }
+  }
+  catch(error) { 
+    console.error("error", error);
+    res.status(500).send({message:"Internal Server Error!!! Please try again later"});
+  }
+});
 
 
 export default app;
