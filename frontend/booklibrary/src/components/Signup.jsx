@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { RadioGroup } from "@headlessui/react";
 import { CheckCircleIcon } from "@heroicons/react/20/solid";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const roles = [
   { id: 1, title: "Customer" },
@@ -12,10 +13,54 @@ function classNames(...classes) {
 }
 
 export default function Signup() {
-  const [selectedDeliveryMethod, setSelectedDeliveryMethod] = useState(
+  const [selectedRole, setselectedRole] = useState(
     roles[0]
   );
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName:'',
+    password: '',
+    emailId:'',
+    role:selectedRole.title.toLowerCase(),
+    // ... other form fields
+  });
 
+
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleRegister = async () => {
+    try {
+      const response = await fetch('http://localhost:8080/customer/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      // Ensure the response is in the expected JSON format
+      const data = await response.json();
+
+      // Check if registration was successful
+      if (data.success) {
+        // Redirect to the login page after successful registration
+        navigate('/login');
+      } else {
+        // Handle unsuccessful registration (display error, etc.)
+        console.error('Registration failed:', data.message);
+      }
+    } catch (error) {
+      console.error('Error during registration:', error.message);
+    }
+  }
+  console.log(formData)
+  
   return (
     <div className="bg-gray-50">
       <div className="flex min-h-full flex-1 flex-col justify-center items-center px-6 py-12 lg:px-8">
@@ -39,7 +84,7 @@ export default function Signup() {
               <div className="mt-4 grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-4">
                 <div>
                   <label
-                    htmlFor="first-name"
+                    htmlFor="firstName"
                     className="block text-sm font-medium text-gray-700"
                   >
                     First name
@@ -47,8 +92,9 @@ export default function Signup() {
                   <div className="mt-1">
                     <input
                       type="text"
-                      id="first-name"
-                      name="first-name"
+                      id="firstName"
+                      name="firstName"
+                      onChange={(e) => handleInputChange(e)}
                       autoComplete="given-name"
                       className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                     />
@@ -57,7 +103,7 @@ export default function Signup() {
 
                 <div>
                   <label
-                    htmlFor="last-name"
+                    htmlFor="lastName"
                     className="block text-sm font-medium text-gray-700"
                   >
                     Last name
@@ -65,8 +111,9 @@ export default function Signup() {
                   <div className="mt-1">
                     <input
                       type="text"
-                      id="last-name"
-                      name="last-name"
+                      id="lastName"
+                      name="lastName"
+                      onChange={(e) => handleInputChange(e)}
                       autoComplete="family-name"
                       className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                     />
@@ -75,7 +122,7 @@ export default function Signup() {
 
                 <div className="sm:col-span-2">
                   <label
-                    htmlFor="email"
+                    htmlFor="emailId"
                     className="block text-sm font-medium text-gray-700"
                   >
                     Email address
@@ -83,8 +130,9 @@ export default function Signup() {
                   <div className="mt-1">
                     <input
                       type="email"
-                      name="email"
-                      id="email"
+                      name="emailId"
+                      id="emailId"
+                      onChange={(e) => handleInputChange(e)}
                       required
                       className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                     />
@@ -103,6 +151,7 @@ export default function Signup() {
                       type="password"
                       name="password"
                       id="password"
+                      onChange={(e) => handleInputChange(e)}
                       autoComplete="password"
                       className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                     />
@@ -113,8 +162,8 @@ export default function Signup() {
 
             <div className="mt-10 border-t border-gray-200 pt-10">
               <RadioGroup
-                value={selectedDeliveryMethod}
-                onChange={setSelectedDeliveryMethod}
+                value={selectedRole}
+                onChange={setselectedRole}
               >
                 <RadioGroup.Label className="text-lg font-medium text-gray-900">
                   Choose a role
@@ -170,6 +219,7 @@ export default function Signup() {
 
               <div className="border-t mt-10 border-gray-200 px-4 py-6 sm:px-6">
                 <button
+                  onClick={handleRegister}
                   type="submit"
                   className="w-full rounded-md border border-transparent bg-indigo-600 px-4 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50"
                 >

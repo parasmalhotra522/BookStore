@@ -12,7 +12,7 @@ import Profile from './components/Profile';
 import AddBook from './components/AddBook';
 
 function App() {
-  const [isLoggedIn , setIsLoggedIn] = useState(false);
+  const [isLoggedIn , setIsLoggedIn] = useState();
 
   const handleLogin = () => {
     setIsLoggedIn(true);
@@ -25,7 +25,7 @@ function App() {
     <Router>
     {isLoggedIn && <Navigation isLoggedIn={isLoggedIn} logout={handleLogout} />}
     <Routes>
-      <Route path="/" exact element={isLoggedIn ? <Home /> : <Login onLogin={handleLogin} />}/>
+      <Route path="/" exact element={isLoggedIn ? <Home /> : <Login onLogin={() => setIsLoggedIn(true)} />}/>
       <Route path="/login" element={<Login onLogin={handleLogin} />}/>
       <Route path="/signup" element={<Signup/>} />
       <Route path="/cart" element={<Cart/>} />
