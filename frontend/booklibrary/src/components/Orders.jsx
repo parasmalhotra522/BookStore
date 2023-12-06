@@ -16,10 +16,8 @@ const orders = [
           imageSrc: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTTrjLOPhyvX0H54YvDc5nQ57UI6UjfrKVDzg&usqp=CAU',
           imageAlt: 'The Laws of contracts',
         },
-        // More products...
       ],
     },
-    // More orders...
   ]
   
   export default function Orders() {

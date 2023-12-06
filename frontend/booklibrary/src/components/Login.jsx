@@ -25,8 +25,7 @@ export default function Login({onLogin}) {
 
       if (response.ok) {
         const data = await response.json();
-        console.log(data); // Check the data received from the server
-        // Process the data, e.g., update state, set tokens, etc.
+        console.log(data);
       } else {
         const errorData = await response.json();
         console.error(errorData); // Log the error data
